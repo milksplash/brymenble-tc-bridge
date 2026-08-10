@@ -1,0 +1,3 @@
+# The brymenble SDK (pulls in bleak). Adjust the path if the repos aren't
+# siblings, or replace with a released wheel/URL when one exists.
+-e ../brymenble

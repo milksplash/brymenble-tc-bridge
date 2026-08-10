@@ -1,0 +1,35 @@
+; =====================================================================
+; Brymen BM78xBT via brymen-tc-bridge - SingleValue driver (baseline).
+;
+; The bridge decodes the BM78xBT BLE stream and emits one SingleValue line
+; per reading: "<value> <unit>", e.g. "607.80 V" / "45.30 mV" / "10.25 kOhm".
+; This file is the guaranteed-to-work baseline: one generic "Reading"
+; column; the unit text travels with each line.
+;
+; Setup:
+;   1. Run the bridge:            python -m bridge --mac 12:34:56:78:9A:BC
+;   2. TestController -> Load devices -> pick "Brymen BM78xBT" -> connect.
+;
+; For per-function columns/units see BM78xBT-MultiMode.def.
+; =====================================================================
+
+#idString Brymen,BM78xBT,
+#name Brymen BM78xBT
+#handle BM78x
+#port 6000
+#driver SingleValue
+
+#interfaceType DMM
+#interface readValue 0
+
+; Value + unit arrive together on each line; the unit is part of the line.
+#value Reading - X6
+
+; Overload / error states arrive as bare text.
+#valueText OL OL
+#valueText -OL "- OL"
+#valueText Auto Auto
+#valueText InEr InEr
+#valueText EF-H EF-H
+#valueText EF-L EF-L
+#valueText "-----" "-----"
