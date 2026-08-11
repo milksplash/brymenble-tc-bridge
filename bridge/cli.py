@@ -15,7 +15,7 @@ import asyncio
 import logging
 import sys
 
-from brymen import DEFAULT_PASSWORD, find_meters
+from brymen import DEFAULT_PASSWORD, find_first_meter
 
 from .bridge import run_bridge
 from .emitter import Emitter
@@ -61,8 +61,8 @@ def build_parser() -> argparse.ArgumentParser:
         default="{mode} {si_value}",
         help='SingleValue line template. Default: "{mode} {si_value}" '
         '(deterministic mode + base-unit value, matches '
-        'BM78xBT-MultiMode.def). Placeholders: {mode} {si_value} {value} '
-        '{prefix} {unit}. Plain form (BM78xBT.def): "{value} {unit}"',
+        'BM78xBT-MultiMode.txt). Placeholders: {mode} {si_value} {value} '
+        '{prefix} {unit}. Plain form (BM78xBT.txt): "{value} {unit}"',
     )
     p.add_argument(
         "--sync-rtc",
@@ -113,15 +113,15 @@ async def _amain(args: argparse.Namespace) -> int:
     if mac is None:
         print("Scanning for a BM78xBT meter... (retrying until one is found)",
               file=sys.stderr)
-        while True:
-            meters = await find_meters()
-            if meters:
-                mac = meters[0].address
-                print(f"Using {meters[0].name or 'BM78xBT'} at {mac}")
-                break
-            print("No BM78xBT meters in range yet — retrying in 5s...",
-                  file=sys.stderr)
-            await asyncio.sleep(5.0)
+        meter = await find_first_meter(
+            retry_interval=5.0,
+            on_retry=lambda attempt: print(
+                f"  (attempt {attempt}: no meter in range yet — retrying in 5s...)",
+                file=sys.stderr,
+            ),
+        )
+        mac = meter.address
+        print(f"Using {meter.name or 'BM78xBT'} at {mac}")
 
     emitter = Emitter(line_format=args.format)
 

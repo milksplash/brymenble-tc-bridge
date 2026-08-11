@@ -10,7 +10,7 @@
 ;   1. Run the bridge:            python -m bridge --mac 12:34:56:78:9A:BC
 ;   2. TestController -> Load devices -> pick "Brymen BM78xBT" -> connect.
 ;
-; For per-function columns/units see BM78xBT-MultiMode.def.
+; For per-function columns/units see BM78xBT-MultiMode.txt.
 ; =====================================================================
 
 #idString Brymen,BM78xBT,

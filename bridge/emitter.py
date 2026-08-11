@@ -11,7 +11,7 @@ text. The optional leading ``<mode>`` is a token of letters that
 TestController uses to select a ``#value`` row — the exact letters it derives
 from the line must be verified in TestController's debug mode (see
 docs/setup.md); the tokens here match the selectors in
-``testcontroller/BM78xBT-MultiMode.def``.
+``testcontroller/BM78xBT-MultiMode.txt``.
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ PREFIX_POWER = {"n": -9, "u": -6, "µ": -6, "m": -3, "": 0, "k": 3, "M": 6, "G":
 # Canonical SDK function name (constants.FUNCTION_NAMES) -> SingleValue mode
 # token (LETTERS ONLY — TestController absorbs any digit in the leading token
 # into the value, so tokens like "T1" would corrupt the reading). These tokens
-# match the selectors in testcontroller/BM78xBT-MultiMode.def.
+# match the selectors in testcontroller/BM78xBT-MultiMode.txt.
 FUNCTION_TO_MODE: Dict[str, str] = {
     "LoZ-ACV": "LoZACV",
     "LoZ-DCV": "LoZDCV",

@@ -91,7 +91,7 @@ class TcpLineServer:
                     break
                 # TestController may probe identity on connect (SCPI-style
                 # *idn?). Answer so a verification handshake doesn't time out;
-                # the reply matches the #idString in the .def files. Anything
+                # the reply matches the #idString in the .txt files. Anything
                 # else TC sends is ignored (the meter is read-only).
                 text = data.decode("latin-1", "replace").strip()
                 if text.upper().startswith("*IDN"):

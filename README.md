@@ -21,7 +21,7 @@ BM78xBT ──BLE──▶ brymen-tc-bridge ──TCP socket──▶ TestContro
 Because the BM78xBT *reports* its current function/unit in every frame, the
 bridge can tag each line with a **mode token**, so TestController shows the
 correct column and unit as you turn the rotary switch — no meter control
-required (see `testcontroller/BM78xBT-MultiMode.def`).
+required (see `testcontroller/BM78xBT-MultiMode.txt`).
 
 ## Layout
 

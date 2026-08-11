@@ -33,7 +33,7 @@ Then in TestController:
 
 1. Open the **Load devices** page.
 2. In the device combobox select **Brymen BM78xBT** (the baseline def) and
-   add it to your inventory, or load the `.def` file directly.
+   add it to your inventory, or load the `.txt` file directly.
 3. Connect it — it should show up as a Socket device on `localhost:6000`.
 4. Open the **Current values** page and check that readings appear and change
    once per second.
@@ -58,7 +58,7 @@ Useful flags:
 | --- | --- |
 | `--password 0000` | 4-digit connection password (default `0000`) |
 | `--host 127.0.0.1` | listen only on this machine (default is all interfaces) |
-| `--port 6000` | TCP port (must match `#port` in the `.def`) |
+| `--port 6000` | TCP port (must match `#port` in the `.txt`) |
 | `--format "{mode} {si_value}"` | default; deterministic mode token + base-unit value |
 | `--sync-rtc` | sync the meter RTC to the host clock on connect |
 | `--stale 10` | seconds without a frame before checking link state |
@@ -74,12 +74,12 @@ if the meter powers off, so it can run unattended for long logs.
 
 ## 4. Baseline vs multi-mode
 
-### Baseline (`testcontroller/BM78xBT.def`)
+### Baseline (`testcontroller/BM78xBT.txt`)
 
 One generic **Reading** column; the value travels with each line
 (`"0.0073"`, `"OL"`). Use the plain form: `--format "{value} {unit}"`.
 
-### Multi-mode (`testcontroller/BM78xBT-MultiMode.def`) — the default
+### Multi-mode (`testcontroller/BM78xBT-MultiMode.txt`) — the default
 
 Per-function columns with the correct unit. This is what
 `--format "{mode} {si_value}"` (the default) produces, and it's the
@@ -101,7 +101,7 @@ line**: letters before the number plus any unit letters after it (SI-prefix
 letters like `k`/`m`/`u` following a number are absorbed into the value, not
 the mode). That is why the bridge emits `<mode> <si_value>` with **no trailing
 unit** — the mode is then exactly the leading letters, and the selectors in
-`BM78xBT-MultiMode.def` match deterministically. (An earlier draft emitted
+`BM78xBT-MultiMode.txt` match deterministically. (An earlier draft emitted
 "`ACV 0.0073 V`", whose mode became `ACVV`, matching nothing — the symptom was
 "no value in TC".)
 
@@ -115,7 +115,7 @@ look at the "Mode reported: <...>" line.
 
 Overload is emitted as `OL` (negative overload as the `-OL` text) and ASCII
 states (`Auto`, `InEr`, `EF-H`/`EF-L`, `-----` for NCV) as bare text. Both
-`.def` files include `#valueText` rows mapping them. Add more as needed.
+`.txt` files include `#valueText` rows mapping them. Add more as needed.
 
 ## 6. Units
 
