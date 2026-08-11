@@ -130,6 +130,15 @@ class Emitter:
             return None
         if reading.is_overload or reading.is_ascii:
             # Bare text for #valueText matching ("OL", "Auto", "InEr", ...).
+            # TODO(fix): ANY ASCII/overload text (not just "OL") makes
+            # TestController DROP the TCP connection entirely — reproduced in
+            # resistance mode on OL, now observed for other ASCII states too.
+            # TC debug shows: ';; BM78xM: Rx as numbers <No data (timeout?)>'
+            # i.e. TC receives the line but reports no data / a timeout. Root
+            # cause NOT identified; earlier fix attempts (incl. emitting
+            # "<mode> <text>" per Protek506) did not resolve it and TC drops
+            # the socket before the bridge can react. Needs investigation in
+            # TestController's SingleValue/valueText handling on the TC side.
             return value
         ctx = {
             "mode": self._mode_text(reading),
