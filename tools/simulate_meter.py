@@ -6,7 +6,8 @@ TCP server on ``--port``), but cycles through a fixed set of sample readings
 instead of connecting to a meter::
 
     python tools/simulate_meter.py [--port 6000] [--rate 1.0]
-    python tools/simulate_meter.py --format "{mode} {value} {unit}"
+    python tools/simulate_meter.py --format "{mode} {si_value}"
+    python tools/simulate_meter.py --format "{value} {unit}"   # single-mode def
 """
 from __future__ import annotations
 
@@ -20,12 +21,13 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from bridge.transports import TcpLineServer  # noqa: E402
+from bridge.emitter import PREFIX_POWER  # noqa: E402
 
 # Sample readings as (mode, value, unit). TestController's SingleValue driver
 # is fed one line per reading.
 #
 # Three small groups so it is easy to watch in TestController:
-#   * numeric readings — multi-mode "{mode} {value}" keeps the mode token
+#   * numeric readings — multi-mode "{mode} {si_value}" keeps the mode token
 #     exact (no unit letters to pollute it);
 #   * overload ("OL")   — ALWAYS sent with a trailing space: TC's valueText
 #     handler strips the token, rebuilds the mode from the remaining letters
@@ -69,9 +71,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--rate", type=float, default=1.0, help="seconds between samples (default: 1.0)")
     p.add_argument(
         "--format",
-        default="{value} {unit}",
-        help='line template (default: "{value} {unit}"; use "{mode} {value} {unit}" '
-        "to test the multi-mode def)",
+        default="{mode} {si_value}",
+        help='line template, same as the bridge (default: "{mode} {si_value}"; '
+        'single-mode def: "{value} {unit}")',
     )
     p.add_argument(
         "--skip-bare",
@@ -96,8 +98,17 @@ def _format_sample(template: str, mode: str, value, unit) -> str:
     if not _looks_numeric(value):
         prefix = f"{mode} " if "{mode}" in template else ""
         return f"{prefix}{value} "  # note: trailing space is intentional
+    # Numeric: same placeholders as the real bridge (bridge/emitter.py) —
+    # {mode}, {value}, {si_value}, {prefix}, {unit}.
+    ctx = {
+        "mode": mode,
+        "value": value,
+        "si_value": _si_value(value, unit),
+        "prefix": _prefix(unit),
+        "unit": unit,
+    }
     try:
-        return template.format(mode=mode, value=value, unit=unit)
+        return template.format(**ctx)
     except (KeyError, ValueError, IndexError):
         return f"{value} {unit}"
 
@@ -109,6 +120,30 @@ def _looks_numeric(value: str) -> bool:
         return True
     except (TypeError, ValueError):
         return False
+
+
+def _split_prefix(unit: str):
+    """Split a unit text like "kOhm" into (prefix, base): ("k", "Ohm")."""
+    for p in PREFIX_POWER:
+        if p and unit.startswith(p):
+            return p, unit[len(p):]
+    return "", unit
+
+
+def _prefix(unit: str) -> str:
+    """SI prefix of a unit text ("kOhm" -> "k", "V" -> "")."""
+    return _split_prefix(unit)[0]
+
+
+def _si_value(value: str, unit: str) -> str:
+    """Value scaled to base units, like the bridge's {si_value}: 45.30 mV ->
+    "0.04530", 10.25 kOhm -> "10250". TestController's "si" #value rows
+    re-apply the prefix for display."""
+    prefix, _ = _split_prefix(unit)
+    power = PREFIX_POWER.get(prefix, 0)
+    decimals = len(value.split(".", 1)[1]) if "." in value else 0
+    scaled = float(value) * (10.0 ** power)
+    return f"{scaled:.{max(0, decimals - power)}f}"
 
 
 async def _amain(args: argparse.Namespace) -> int:
