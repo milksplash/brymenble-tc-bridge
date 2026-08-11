@@ -47,6 +47,19 @@ TestController: **Load devices** → pick *Brymen BM78xBT* → connect to
 See [`docs/setup.md`](docs/setup.md) for the full walkthrough, the multi-mode
 option, and how to verify the mode letters in TestController's debug mode.
 
+## Tests
+
+Offline unit tests (no meter or TestController needed):
+
+```bash
+.venv\Scripts\python -m pip install -r requirements-dev.txt
+.venv\Scripts\python -m pytest
+```
+
+These cover the SingleValue emitter (`bridge/emitter.py` — ASCII-safe units,
+base-unit scaling, mode tokens, overload/ASCII text) and the TCP line server
+(`bridge/transports.py` — framing and the `*IDN?` handshake).
+
 ## Notes
 
 - The meter's function **cannot be switched over BLE** (documented protocol

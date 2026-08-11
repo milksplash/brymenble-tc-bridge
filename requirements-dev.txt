@@ -1,0 +1,5 @@
+# Runtime deps (installs the SDK from ../brymenble, see README)
+-r requirements.txt
+
+# Test-only deps
+pytest
