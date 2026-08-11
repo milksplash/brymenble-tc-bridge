@@ -25,7 +25,11 @@
 ; Value + unit arrive together on each line; the unit is part of the line.
 #value Reading - X6
 
-; Overload / error states arrive as bare text.
+; Overload / error states arrive as "OL " etc. - ALWAYS with a trailing
+; space. TC's valueText handler strips the token, rebuilds the mode from the
+; remaining letters and reads one char past the token; a bare / last-token
+; "OL" drops the socket. (Negative overload still shows as +inf - TC cannot
+; render -OL via this path.)
 #valueText OL OL
 #valueText -OL "- OL"
 #valueText Auto Auto

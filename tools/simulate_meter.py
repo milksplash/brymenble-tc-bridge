@@ -21,25 +21,44 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from bridge.transports import TcpLineServer  # noqa: E402
 
-# Sample readings as (mode, value, unit). When value is None the mode is
-# emitted as bare text (overload / ASCII state), like the real bridge.
+# Sample readings as (mode, value, unit). TestController's SingleValue driver
+# is fed one line per reading.
+#
+# Three small groups so it is easy to watch in TestController:
+#   * numeric readings — multi-mode "{mode} {value}" keeps the mode token
+#     exact (no unit letters to pollute it);
+#   * overload ("OL")   — ALWAYS sent with a trailing space: TC's valueText
+#     handler strips the token, rebuilds the mode from the remaining letters
+#     and reads one char past the token. A bare / last-token "OL" drops the
+#     socket; a trailing unit pollutes the multi-mode token ("DCV OL V" ->
+#     mode "DCVV" -> no column); a single trailing space keeps the mode
+#     clean ("DCV OL " -> mode "DCV") and survives TC's socket reader;
+#   * ASCII text states — same trailing-space rule.
+# A "0.000 V" probe after each group confirms the display recovered.
 SAMPLES = [
+    # Numeric readings
     ("DCV", "607.80", "V"),
-    ("DCV", "0.000", "V"),
     ("ACV", "230.45", "V"),
     ("DCmV", "45.30", "mV"),
     ("RES", "10.25", "kOhm"),
-    ("RES", "0.325", "MOhm"),
     ("DCA", "-1.234", "A"),
     ("DCmA", "3.456", "mA"),
     ("DCuA", "88.90", "uA"),
     ("DUTY", "50.00", "%"),
     ("CAP", "1.234", "uF"),
-    ("T1", "25.60", "C"),
-    ("OL", None, None),
-    ("Auto", None, None),
-    ("InEr", None, None),
+    ("TC", "25.60", "C"),  # T1 on the meter -> bridge mode token "TC"
+    ("DCV", "0.000", "V"),  # recovery probe
+
+    # Overload (never bare — trailing unit required)
     ("DCV", "OL", "V"),
+    ("DCV", "-OL", "V"),
+    ("RES", "OL", "Ohm"),
+    ("DCV", "0.000", "V"),  # recovery probe
+
+    # ASCII text states
+    ("DCV", "Auto", "V"),
+    ("DCV", "InEr", "V"),
+    ("DCV", "0.000", "V"),  # recovery probe
 ]
 
 
@@ -54,29 +73,62 @@ def build_parser() -> argparse.ArgumentParser:
         help='line template (default: "{value} {unit}"; use "{mode} {value} {unit}" '
         "to test the multi-mode def)",
     )
+    p.add_argument(
+        "--skip-bare",
+        action="store_true",
+        help="skip the bare-text samples (value=None, e.g. OL/Auto/InEr) that "
+        "drop the TestController connection — use to isolate the numeric/multi-mode "
+        "format without the connection-poisoning states",
+    )
     return p
 
 
 def _format_sample(template: str, mode: str, value, unit) -> str:
     if value is None:
         return mode  # bare text (OL / Auto / ...)
+    # Overload / ASCII tokens ("OL", "-OL", "Auto", "InEr", "EF-H", ...) are
+    # NOT numbers. TC's valueText handler strips the token, rebuilds the mode
+    # from the REMAINING letters, and reads one char past the token — so the
+    # token must not be the last thing on the line. A trailing unit pollutes
+    # the multi-mode token ("DCV OL V" -> mode "DCVV" -> no column); a single
+    # trailing space keeps the mode clean and is not stripped by TC's socket
+    # reader. Include the mode only when the template uses it.
+    if not _looks_numeric(value):
+        prefix = f"{mode} " if "{mode}" in template else ""
+        return f"{prefix}{value} "  # note: trailing space is intentional
     try:
         return template.format(mode=mode, value=value, unit=unit)
     except (KeyError, ValueError, IndexError):
         return f"{value} {unit}"
 
 
+def _looks_numeric(value: str) -> bool:
+    """True if value is a plain decimal number (not an OL/ASCII token)."""
+    try:
+        float(value)
+        return True
+    except (TypeError, ValueError):
+        return False
+
+
 async def _amain(args: argparse.Namespace) -> int:
+    samples = SAMPLES
+    if args.skip_bare:
+        samples = [s for s in SAMPLES if s[1] is not None]
+        if not samples:
+            samples = SAMPLES
     server = TcpLineServer(host=args.host, port=args.port)
     await server.start()
     print(
         f"simulated bridge listening on {args.host}:{server.bound_port} — "
         "connect TestController here; Ctrl+C to stop."
     )
+    if args.skip_bare:
+        print(f"note: skipping {len(SAMPLES) - len(samples)} bare-text sample(s)")
     i = 0
     try:
         while True:
-            mode, value, unit = SAMPLES[i % len(SAMPLES)]
+            mode, value, unit = samples[i % len(samples)]
             i += 1
             line = _format_sample(args.format, mode, value, unit)
             print(f"> {line}")

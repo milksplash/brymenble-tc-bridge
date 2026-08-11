@@ -113,9 +113,19 @@ look at the "Mode reported: <...>" line.
 
 ## 5. Overload / ASCII states
 
-Overload is emitted as `OL` (negative overload as the `-OL` text) and ASCII
-states (`Auto`, `InEr`, `EF-H`/`EF-L`, `-----` for NCV) as bare text. Both
-`.txt` files include `#valueText` rows mapping them. Add more as needed.
+Overload is emitted as `OL` and ASCII states (`Auto`, `InEr`, `EF-H`/`EF-L`,
+`-----` for NCV) as their token — **always with a trailing space and never as
+bare/last-token text**, e.g. `DCV OL ` (multi-mode) or `OL ` (single-mode).
+This is required by TestController's `#valueText` handler: it strips the
+matched token, rebuilds the mode from the remaining letters, and reads one
+char past the token. A bare / last-token `OL` drops the socket, and a
+trailing unit pollutes the mode token (`DCV OL V` → mode `DCVV` → no column).
+The trailing space survives TC's socket reader and leaves the mode clean
+(`DCV OL ` → mode `DCV`). Both `.txt` files include `#valueText` rows mapping
+the tokens; add more as needed.
+
+> Known limitation: TestController renders negative overload as `inf`
+> (positive) — its `#valueText` handler drops the sign for `-OL`.
 
 ## 6. Units
 

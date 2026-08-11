@@ -2,7 +2,7 @@
 
 These lock down the ASCII-safe conversions (Ω→Ohm, µ→u), the base-unit
 ``si_value`` scaling, the letters-only mode tokens, and the overload/ASCII
-bare-text behaviour that TestController relies on.
+trailing-space behaviour that TestController relies on.
 """
 from bridge.emitter import Emitter
 
@@ -45,14 +45,22 @@ def test_micro_prefix_is_ascii_safe(make_reading):
     assert e.format_reading(r) == "4.50 uA"
 
 
-def test_overload_is_bare_text(make_reading):
-    # Overload must be exactly "OL" (matched by TestController #valueText).
-    assert Emitter().format_reading(make_reading(is_overload=True)) == "OL"
+def test_overload_has_mode_and_trailing_space(make_reading):
+    # Overload is emitted as "{mode} OL " (trailing space, never bare "OL"):
+    # TC's valueText handler reads one char past the token, so a last-token
+    # "OL" drops the socket; a trailing unit pollutes the multi-mode token.
+    assert Emitter().format_reading(make_reading(is_overload=True)) == "DCV OL "
 
 
-def test_ascii_is_bare_text(make_reading):
+def test_overload_single_mode_has_no_mode(make_reading):
+    # Single-mode template has no {mode}: overload is "OL " (value + space).
+    e = Emitter(line_format="{value} {unit}")
+    assert e.format_reading(make_reading(is_overload=True)) == "OL "
+
+
+def test_ascii_has_mode_and_trailing_space(make_reading):
     r = make_reading(is_ascii=True, ascii_text="Auto")
-    assert Emitter().format_reading(r) == "Auto"
+    assert Emitter().format_reading(r) == "DCV Auto "
 
 
 def test_mode_tokens(make_reading):
@@ -74,4 +82,4 @@ def test_format_frame_skips_none_readings(make_reading):
     frame = StreamFrame(
         info=None, readings=[make_reading(), None, make_reading(is_overload=True)]
     )
-    assert Emitter().format_frame(frame) == ["DCV 607.80", "OL"]
+    assert Emitter().format_frame(frame) == ["DCV 607.80", "DCV OL "]

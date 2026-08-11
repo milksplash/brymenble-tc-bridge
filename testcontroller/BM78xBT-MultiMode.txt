@@ -62,7 +62,12 @@
 #value EFLO - si EFLO
 #value EFHI - si EFHI
 
-; --- Overload / error states (bare text, no mode) ----------------------
+; --- Overload / error states: the bridge emits "<mode> OL " (trailing space)
+; TC's valueText handler strips the token, rebuilds the mode from the
+; remaining letters and reads one char past the token; a bare / last-token
+; "OL" drops the socket, a trailing unit pollutes the mode. The trailing
+; space keeps the mode clean ("DCV OL " -> mode "DCV"). The "-OL" row is
+; retained for completeness but TC renders negative overload as +inf.
 #valueText OL OL
 #valueText -OL "- OL"
 #valueText Auto Auto

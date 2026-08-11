@@ -90,8 +90,12 @@ class Emitter:
     The default ``"{mode} {si_value}"`` is deterministic for TestController's
     SingleValue driver: the mode is exactly the leading letters, and there are
     no unit letters after the number to pollute it. Overload / ASCII states
-    are always emitted as bare text (e.g. ``OL``, ``Auto``) so TestController's
-    ``#valueText`` rows can match them — no unit is appended.
+    (``OL``, ``Auto``, ``InEr``, ...) are emitted as ``{mode} <token> `` — with
+    a trailing space, never bare text: TestController's ``#valueText`` handler
+    strips the token, rebuilds the mode from the remaining letters and reads
+    one char past the token, so a bare / last-token ``OL`` drops the socket
+    and a trailing unit pollutes the mode. The trailing space is preserved by
+    TC's socket reader and leaves the mode clean.
     """
 
     def __init__(
@@ -129,17 +133,20 @@ class Emitter:
         if value is None:
             return None
         if reading.is_overload or reading.is_ascii:
-            # Bare text for #valueText matching ("OL", "Auto", "InEr", ...).
-            # TODO(fix): ANY ASCII/overload text (not just "OL") makes
-            # TestController DROP the TCP connection entirely — reproduced in
-            # resistance mode on OL, now observed for other ASCII states too.
-            # TC debug shows: ';; BM78xM: Rx as numbers <No data (timeout?)>'
-            # i.e. TC receives the line but reports no data / a timeout. Root
-            # cause NOT identified; earlier fix attempts (incl. emitting
-            # "<mode> <text>" per Protek506) did not resolve it and TC drops
-            # the socket before the bridge can react. Needs investigation in
-            # TestController's SingleValue/valueText handling on the TC side.
-            return value
+            # Overload / ASCII tokens ("OL", "Auto", "InEr", ...) are matched
+            # by TestController's #valueText rows. TC's SingleValue valueText
+            # handler strips the matched token, rebuilds the mode from the
+            # REMAINING letters, and reads one char past the token — so the
+            # token must never be the last thing on the line:
+            #   * bare "OL"            -> substring past the end -> socket drop
+            #   * "DCV OL V" (unit)    -> mode "DCVV" -> no #value row matches
+            #   * "DCV OL " (trailing space) -> mode "DCV" -> matches  OK
+            # The trailing space survives TC's socket reader (it does not trim
+            # the line) and keeps the mode clean in single- and multi-mode.
+            # The mode token is included only when the template uses it.
+            mode = self._mode_text(reading)
+            prefix = f"{mode} " if "{mode}" in self.line_format else ""
+            return f"{prefix}{value} "
         ctx = {
             "mode": self._mode_text(reading),
             "value": value,
