@@ -58,6 +58,19 @@ def test_overload_single_mode_has_no_mode(make_reading):
     assert e.format_reading(make_reading(is_overload=True)) == "OL "
 
 
+def test_temperature_overload_shows_dashes(make_reading):
+    # Display accommodation (NOT protocol behavior): the meter's LCD shows
+    # "----" for a temperature overload even though the SDK reports plain "OL"
+    # (the protocol only sends the OL flag — see captures cap-010).
+    assert Emitter().format_reading(
+        make_reading(function_name="T1", is_overload=True)
+    ) == "TC ---- "
+    # Non-temperature overloads still emit "OL".
+    assert Emitter().format_reading(
+        make_reading(function_name="Resistance", is_overload=True)
+    ) == "RES OL "
+
+
 def test_ascii_has_mode_and_trailing_space(make_reading):
     r = make_reading(is_ascii=True, ascii_text="Auto")
     assert Emitter().format_reading(r) == "DCV Auto "

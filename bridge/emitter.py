@@ -84,6 +84,14 @@ OVERLOAD_TEXT = "OL"
 # EF-H/EF-L), hence "?" plus a matching "#valueText ? ?" row in both .txt defs.
 GAP_TEXT = "?"
 
+# Display accommodation (NOT protocol behavior): the meter's LCD shows "----"
+# (4 dashes) for a temperature overload even though the protocol only sends the
+# OL flag (real-meter capture cap-010 in the SDK fixtures). The SDK stays
+# protocol-faithful ("OL"); the bridge mirrors the meter's actual display for
+# T1/T2/T1-T2, and the defs have a matching "#valueText \"----\"" row.
+TEMP_OVERLOAD_FUNCTIONS = ("T1", "T2", "T1-T2")
+TEMP_OVERLOAD_TEXT = "----"
+
 
 class Emitter:
     """Turn parsed Brymen frames into SingleValue lines for a consumer.
@@ -187,6 +195,11 @@ class Emitter:
     def _value_text(self, reading: ReadingPacket) -> Optional[str]:
         """The numeric/text value part of the line."""
         if reading.is_overload:
+            # The meter's LCD shows "----" for a temperature overload; the
+            # protocol only sends the OL flag, so this is a bridge-side display
+            # accommodation (see TEMP_OVERLOAD_FUNCTIONS above).
+            if reading.function_name in TEMP_OVERLOAD_FUNCTIONS:
+                return TEMP_OVERLOAD_TEXT
             return OVERLOAD_TEXT
         if reading.is_ascii:
             return reading.ascii_text if reading.ascii_text else OVERLOAD_TEXT
