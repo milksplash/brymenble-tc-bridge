@@ -77,6 +77,13 @@ FUNCTION_TO_MODE: Dict[str, str] = {
 # Text emitted for an overload reading. SingleValue maps this via #valueText.
 OVERLOAD_TEXT = "OL"
 
+# Text emitted during a link-up data gap (function/range switch). It is a
+# dedicated "?" token (a non-numeric #valueText value) so TestController keeps
+# the connection and shows its "?" placeholder. It deliberately does NOT
+# collide with a real meter ASCII output (the meter's map is Auto/InEr/dashes/
+# EF-H/EF-L), hence "?" plus a matching "#valueText ? ?" row in both .txt defs.
+GAP_TEXT = "?"
+
 
 class Emitter:
     """Turn parsed Brymen frames into SingleValue lines for a consumer.
@@ -159,6 +166,21 @@ class Emitter:
         except (KeyError, ValueError, IndexError):
             # Malformed template -> fall back to the plain form.
             return f"{ctx['value']} {ctx['unit']}"
+
+    def gap_line(self, reading: Optional[ReadingPacket] = None) -> str:
+        """A keep-alive line for a data gap (e.g. a function/range switch).
+
+        TestController's SingleValue socket reader closes the connection after
+        ~1.5-2 s of silence, and the meter blanks its display during a switch,
+        so the bridge would otherwise feed TC nothing and lose it. Sending the
+        dedicated non-numeric ``#valueText`` token ``"?"`` makes TC show its "?"
+        placeholder instead of a real reading. ``reading`` supplies the last
+        known mode token so the multi-mode def still has a column to show the
+        "?" in; pass None for the single-mode def (no mode token).
+        """
+        mode = self._mode_text(reading) if reading is not None else None
+        prefix = f"{mode} " if ("{mode}" in self.line_format and mode) else ""
+        return f"{prefix}{GAP_TEXT} "
 
     # -- internals --------------------------------------------------------
 

@@ -75,3 +75,5 @@
 #valueText EF-H EF-H
 #valueText EF-L EF-L
 #valueText "-----" "-----"
+; Dedicated gap token for the bridge's data-gap keep-alive (NOT a meter state).
+#valueText ? ?

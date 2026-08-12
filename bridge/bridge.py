@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import logging
+import time
 
 from brymen import BrymenClient
 
@@ -28,6 +31,7 @@ async def run_bridge(
     stale_timeout: float = 10.0,
     pause_cap: float = 60.0,
     sync_rtc: bool = False,
+    keepalive_interval: float = 0.5,
 ) -> None:
     """Connect to the meter and stream SingleValue lines to ``server``.
 
@@ -37,8 +41,36 @@ async def run_bridge(
     reconnect is forced anyway (e.g. the link-state report lags behind a real
     power-off). Both map onto ``BrymenClient.read_stream()``, which owns the
     pause-vs-power-off decision.
+
+    ``keepalive_interval`` is how long a link-up data gap (function/range
+    switch — the meter blanks its display) may last before the bridge re-sends
+    a "?" gap line to TestController, so TC doesn't time out and drop the
+    socket (its reader closes after ~1.5-2 s of silence). The meter streams at
+    ~5 Hz (~200 ms), so normal frames land well inside the interval and no gap
+    lines are sent during healthy operation. ``keepalive_interval <= 0``
+    disables the keep-alive.
     """
     client = BrymenClient(mac, password, sync_rtc_on_connect=sync_rtc)
+    last_reading = None
+    last_sent = 0.0
+
+    async def _keepalive() -> None:
+        """Re-send a "?" gap line while the BLE link is up but no reading has
+        been sent for ``keepalive_interval`` (e.g. mid function switch)."""
+        nonlocal last_sent
+        while True:
+            await asyncio.sleep(keepalive_interval)
+            if (
+                client.is_connected
+                and last_reading is not None
+                and time.monotonic() - last_sent >= keepalive_interval
+            ):
+                await server.send(emitter.gap_line(last_reading))
+                last_sent = time.monotonic()
+
+    keepalive_task = None
+    if keepalive_interval > 0:
+        keepalive_task = asyncio.create_task(_keepalive())
     try:
         await server.start()
         log.info(
@@ -81,8 +113,19 @@ async def run_bridge(
             on_lost=_on_lost,
             on_reconnected=_on_reconnected,
         ):
+            # Remember the last reading so the gap keep-alive can reuse its
+            # mode token (the multi-mode def needs a valid column to show "?").
+            for reading in frame.readings or ():
+                if reading is not None:
+                    last_reading = reading
+                    break
             for line in emitter.format_frame(frame):
                 await server.send(line)
+                last_sent = time.monotonic()
     finally:
+        if keepalive_task is not None:
+            keepalive_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await keepalive_task
         await client.close()
         await server.close()

@@ -85,6 +85,14 @@ def build_parser() -> argparse.ArgumentParser:
         "a reconnect; this bounds the worst case (default: 60)",
     )
     p.add_argument(
+        "--keepalive",
+        type=float,
+        default=0.5,
+        help="seconds of link-up silence before re-sending a '?' gap line to "
+        "TestController during a data gap (function/range switch), so TC "
+        "doesn't time out and drop the socket. 0 disables it (default: 0.5)",
+    )
+    p.add_argument(
         "--verbose",
         "-v",
         action="count",
@@ -133,6 +141,7 @@ async def _amain(args: argparse.Namespace) -> int:
         stale_timeout=args.stale,
         pause_cap=args.pause_cap,
         sync_rtc=args.sync_rtc,
+        keepalive_interval=args.keepalive,
     )
     return 0
 

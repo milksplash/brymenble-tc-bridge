@@ -127,6 +127,20 @@ the tokens; add more as needed.
 > Known limitation: TestController renders negative overload as `inf`
 > (positive) — its `#valueText` handler drops the sign for `-OL`.
 
+## 5a. Data gaps (function/range switches)
+
+The meter blanks its display during a function/range switch, so no frames
+arrive for a moment. TestController's SingleValue socket reader drops the
+connection after ~1.5-2 s of silence, so the bridge re-sends a `?`
+keep-alive line every `--keepalive` seconds while the BLE link is up but no
+reading has been sent. `?` is a dedicated `#valueText` token (a `#valueText ? ?`
+row in both `.txt` files) — deliberately NOT one of the meter's real ASCII
+outputs (`Auto`/`InEr`/dashes/`EF-H`/`EF-L`), so a gap is never confused with
+a genuine state. It is non-numeric, so TC shows its `?` placeholder rather
+than a fake reading. The meter streams at ~5 Hz, so healthy frames land well
+inside the interval and no gap lines are sent during normal operation.
+`--keepalive 0` disables the keep-alive.
+
 ## 6. Units
 
 Units are emitted ASCII-safe because TestController reads lines as

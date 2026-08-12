@@ -63,6 +63,18 @@ def test_ascii_has_mode_and_trailing_space(make_reading):
     assert Emitter().format_reading(r) == "DCV Auto "
 
 
+def test_gap_line(make_reading):
+    # Data-gap keep-alive: dedicated "?" token (not a real meter ASCII output)
+    # with a trailing space so TestController shows "?" instead of dropping the
+    # socket on a silence gap.
+    assert Emitter().gap_line() == "? "
+    # Multi-mode: the last reading's mode token keeps a column to show "?" in.
+    assert Emitter().gap_line(make_reading()) == "DCV ? "
+    # Single-mode template has no {mode}: no mode token.
+    e = Emitter(line_format="{value} {unit}")
+    assert e.gap_line(make_reading()) == "? "
+
+
 def test_mode_tokens(make_reading):
     e = Emitter()
     assert e._mode_text(make_reading(function_name="DC+ACV")) == "DCACV"
