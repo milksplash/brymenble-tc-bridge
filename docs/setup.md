@@ -68,6 +68,13 @@ Useful flags:
 Then connect TestController to the same port. The bridge reconnects forever
 if the meter powers off, so it can run unattended for long logs.
 
+> **TestController does not auto-reconnect.** The bridge reconnects to the
+> meter automatically after a power cycle, but TestController is the TCP
+> *client* and does not re-establish its socket on its own. After the meter
+> powers off and back on, reconnect the device manually in TestController
+> (disconnect, then connect). This is TestController behaviour and cannot be
+> changed from the bridge side.
+
 > **Transport note:** the bridge is a TCP *server*; TestController is the
 > *client* (Socket interface). A virtual COM port is not needed — the Socket
 > interface is the simplest transport and works over LAN/WSL too.

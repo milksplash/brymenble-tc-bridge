@@ -15,7 +15,7 @@ import asyncio
 import logging
 import sys
 
-from brymen import DEFAULT_PASSWORD, find_first_meter
+from brymen import DEFAULT_PASSWORD, console, find_first_meter
 
 from .bridge import run_bridge
 from .emitter import Emitter
@@ -111,25 +111,21 @@ async def _amain(args: argparse.Namespace) -> int:
     # for the meter (it may be powered off / out of range / mid-reconnect).
     server = TcpLineServer(host=args.host, port=args.port)
     await server.start()
-    print(
-        f"Listening on {args.host}:{server.bound_port} — point TestController "
+    console.status(
+        f"listening on {args.host}:{server.bound_port} — point TestController "
         f"at #port {server.bound_port}",
-        file=sys.stderr,
+        stream=sys.stderr,
     )
 
     mac = args.mac
     if mac is None:
-        print("Scanning for a BM78xBT meter... (retrying until one is found)",
-              file=sys.stderr)
+        console.scanning()
         meter = await find_first_meter(
             retry_interval=5.0,
-            on_retry=lambda attempt: print(
-                f"  (attempt {attempt}: no meter in range yet — retrying in 5s...)",
-                file=sys.stderr,
-            ),
+            on_retry=console.scanning_retry,
         )
         mac = meter.address
-        print(f"Using {meter.name or 'BM78xBT'} at {mac}")
+        console.using(mac, meter.name)
 
     emitter = Emitter(line_format=args.format)
 

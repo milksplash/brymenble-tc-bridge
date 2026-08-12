@@ -32,6 +32,7 @@ async def run_bridge(
     pause_cap: float = 60.0,
     sync_rtc: bool = False,
     keepalive_interval: float = 0.5,
+    client_factory=None,
 ) -> None:
     """Connect to the meter and stream SingleValue lines to ``server``.
 
@@ -49,8 +50,16 @@ async def run_bridge(
     ~5 Hz (~200 ms), so normal frames land well inside the interval and no gap
     lines are sent during healthy operation. ``keepalive_interval <= 0``
     disables the keep-alive.
+
+    ``client_factory`` is a test seam: a zero-arg callable returning the
+    ``BrymenClient`` (or a fake) to drive. Defaults to a real client for
+    ``mac``/``password``/``sync_rtc``.
     """
-    client = BrymenClient(mac, password, sync_rtc_on_connect=sync_rtc)
+    if client_factory is None:
+        client_factory = lambda: BrymenClient(  # noqa: E731
+            mac, password, sync_rtc_on_connect=sync_rtc
+        )
+    client = client_factory()
     last_reading = None
     last_sent = 0.0
 

@@ -1,5 +1,9 @@
 # brymen-tc-bridge
 
+> **⚠️ Unofficial.** This is an independent, community-developed project. It is
+> **not affiliated with, endorsed by, or sponsored by** Brymen Technology Corporation. "Brymen" and the device model names are trademarks of their
+> respective owners.
+
 Bridge a **Brymen BM78xBT** BLE multimeter into
 [**TestController**](https://lygte-info.dk/project/TestControllerIntro%20UK.html)
 (lygte-info.dk's freeware multi-device test & logging tool).
@@ -67,6 +71,12 @@ base-unit scaling, mode tokens, overload/ASCII text) and the TCP line server
   follows and TestController logs the right units.
 - TestController reads one line per reading; the bridge reconnects
   automatically if the meter powers off, and never crashes.
+- **TestController does not auto-reconnect its socket.** If the meter powers
+  off mid-test, the bridge reconnects to the meter on its own — but
+  TestController's Socket connection to the bridge is not re-established by
+  TestController. After a meter power cycle you must reconnect manually in
+  TestController (disconnect then connect the device again). This is
+  TestController behaviour, not something the bridge can fix.
 - Units are emitted ASCII-safe (`Ω` → `Ohm`, `µ` → `u`) because TestController
   reads lines as ISO-8859-1.
 
