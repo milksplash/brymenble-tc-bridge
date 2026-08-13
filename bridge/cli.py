@@ -65,16 +65,12 @@ def build_parser() -> argparse.ArgumentParser:
         '{prefix} {unit}. Plain form (BM78xBT.txt): "{value} {unit}"',
     )
     p.add_argument(
-        "--sync-rtc",
-        action="store_true",
-        help="sync the meter's RTC to the host clock on (re)connect",
-    )
-    p.add_argument(
-        "--stale",
-        type=float,
-        default=10.0,
-        help="seconds without a frame before checking link state "
-        "(default: 10)",
+        "--no-sync-rtc",
+        dest="sync_rtc",
+        action="store_false",
+        default=True,
+        help="don't sync the meter's RTC to the host clock on (re)connect "
+        "(default: sync)",
     )
     p.add_argument(
         "--pause-cap",
@@ -134,7 +130,6 @@ async def _amain(args: argparse.Namespace) -> int:
         password=args.password,
         server=server,
         emitter=emitter,
-        stale_timeout=args.stale,
         pause_cap=args.pause_cap,
         sync_rtc=args.sync_rtc,
         keepalive_interval=args.keepalive,

@@ -1,16 +1,29 @@
-"""Tie the Brymen SDK, the SingleValue emitter and a transport together."""
+"""Tie the Brymen SDK, the SingleValue emitter and a transport together.
+
+Runnable directly as a script (e.g. the VS Code "Run Python File" button) or
+as a module (``python -m bridge``); both launch the same CLI (``bridge.cli``).
+"""
 
 from __future__ import annotations
 
 import asyncio
 import contextlib
 import logging
+import os
+import sys
 import time
+
+# Running this file as a script (``python bridge/bridge.py``) puts the
+# script's directory on sys.path instead of the repo root, so the package
+# imports below can't resolve. Detect that and add the repo root so both
+# entry points work.
+if __package__ in (None, ""):
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from brymen import BrymenClient
 
-from .emitter import Emitter
-from .transports import TcpLineServer
+from bridge.emitter import Emitter
+from bridge.transports import TcpLineServer
 
 log = logging.getLogger(__name__)
 
@@ -28,20 +41,19 @@ async def run_bridge(
     password: str,
     server: TcpLineServer,
     emitter: Emitter,
-    stale_timeout: float = 10.0,
     pause_cap: float = 60.0,
-    sync_rtc: bool = False,
+    sync_rtc: bool = True,
     keepalive_interval: float = 0.5,
     client_factory=None,
 ) -> None:
     """Connect to the meter and stream SingleValue lines to ``server``.
 
     Runs until cancelled. The meter is reconnected forever (it may power off
-    mid-test). ``stale_timeout`` is how often a lack of data is checked;
-    ``pause_cap`` bounds how long a BLE-link-up silence is tolerated before a
-    reconnect is forced anyway (e.g. the link-state report lags behind a real
-    power-off). Both map onto ``BrymenClient.read_stream()``, which owns the
-    pause-vs-power-off decision.
+    mid-test). ``pause_cap`` bounds how long a BLE-link-up silence is
+    tolerated before a reconnect is forced anyway (e.g. the link-state report
+    lags behind a real power-off). It maps onto ``BrymenClient.read_stream()``,
+    which owns the pause-vs-power-off decision (using its ``no_data_timeout``
+    default to check the link state).
 
     ``keepalive_interval`` is how long a link-up data gap (function/range
     switch — the meter blanks its display) may last before the bridge re-sends
@@ -94,13 +106,6 @@ async def run_bridge(
         await client.ensure_connected(retries=None, on_retry=_on_retry)
         log.info("connected to %s", mac)
 
-        def _on_pause() -> None:
-            log.info(
-                "no data for %.0fs but BLE link still up — "
-                "treating as a pause (not reconnecting)",
-                stale_timeout,
-            )
-
         def _on_lost(reason: str) -> None:
             if reason == "pause_cap":
                 log.warning(
@@ -114,11 +119,9 @@ async def run_bridge(
             log.info("reconnected to %s", mac)
 
         async for frame in client.read_stream(
-            no_data_timeout=stale_timeout,
             pause_cap=pause_cap,
             retries=None,
             on_retry=_on_retry,
-            on_pause=_on_pause,
             on_lost=_on_lost,
             on_reconnected=_on_reconnected,
         ):
@@ -138,3 +141,8 @@ async def run_bridge(
                 await keepalive_task
         await client.close()
         await server.close()
+
+
+if __name__ == "__main__":  # pragma: no cover
+    from bridge.cli import main
+    sys.exit(main())

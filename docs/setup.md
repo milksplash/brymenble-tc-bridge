@@ -60,8 +60,7 @@ Useful flags:
 | `--host 127.0.0.1` | listen only on this machine (default is all interfaces) |
 | `--port 6000` | TCP port (must match `#port` in the `.txt`) |
 | `--format "{mode} {si_value}"` | default; deterministic mode token + base-unit value |
-| `--sync-rtc` | sync the meter RTC to the host clock on connect |
-| `--stale 10` | seconds without a frame before checking link state |
+| `--no-sync-rtc` | don't sync the meter RTC to the host clock on (re)connect (default: sync) |
 | `--pause-cap 60` | seconds of BLE-link-up silence before forcing a reconnect anyway |
 | `-v` / `-vv` | more logging |
 
