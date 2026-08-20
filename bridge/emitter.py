@@ -75,6 +75,14 @@ FUNCTION_TO_MODE: Dict[str, str] = {
 }
 
 # Text emitted for an overload reading. SingleValue maps this via #valueText.
+#
+# NOTE: TestController's SingleValue driver special-cases the #valueText
+# "value" OL/-OL and replaces it with its overflow representation, so it does
+# NOT display the literal text "OL". With the default "Overflow handling =
+# infinite" setting TC renders the infinity symbol "∞" (what users often read
+# as "inf"). This is hardcoded in DeviceSingleValue.setMessage(); the only
+# way to change what overload shows is TC's global "Overflow handling"
+# setting (infinite / high value / zero), not the emitted token.
 OVERLOAD_TEXT = "OL"
 
 # Text emitted during a link-up data gap (function/range switch). It is a

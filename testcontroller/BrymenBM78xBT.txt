@@ -69,8 +69,19 @@
 ; TC's valueText handler strips the token, rebuilds the mode from the
 ; remaining letters and reads one char past the token; a bare / last-token
 ; "OL" drops the socket, a trailing unit pollutes the mode. The trailing
-; space keeps the mode clean ("DCV OL " -> mode "DCV"). The "-OL" row is
-; retained for completeness but TC renders negative overload as +inf.
+; space keeps the mode clean ("DCV OL " -> mode "DCV").
+;
+; NOTE - what TestController actually DISPLAYS for overload: the SingleValue
+; driver special-cases the #valueText "value" OL/-OL and replaces it with its
+; overflow representation (DeviceInterface.overflowValueString()). With the
+; default "Overflow handling = infinite" setting that is the infinity symbol
+; "∞" (U+221E) - what users usually read as "inf" - NOT the literal text
+; "OL". TC cannot render the text "OL" for any DMM (verified in
+; DeviceSingleValue.setMessage(); the mapping is hardcoded). The only way to
+; change what overload shows is TestController's global "Overflow handling"
+; setting (infinite / high value / zero), not this definition file. Also note
+; TC maps BOTH "OL" and "-OL" to POSITIVE infinity, so the "-OL" row below is
+; kept only for documentation and can never display a negative overload.
 #valueText OL OL
 #valueText -OL "- OL"
 #valueText Auto Auto

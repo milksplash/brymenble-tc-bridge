@@ -81,6 +81,15 @@ base-unit scaling, mode tokens, overload/ASCII text) and the TCP line server
   bridge therefore maps the temperature functions to letters-only tokens
   (`T1`→`TEMPONE`, `T2`→`TEMPTWO`, `T1-T2`→`TEMPDIFF`).
 
+- **Overload shows as `∞` in TestController, not `OL`.** TC's SingleValue
+  driver hardcodes the `#valueText` values `OL`/`-OL` to its overflow
+  representation, which (default "Overflow handling = infinite") renders as
+  the infinity symbol `∞` — the "inf" you may see on the meter. TestController
+  cannot display the literal text `OL` for any DMM (verified in its
+  `DeviceSingleValue` driver). To change what overload shows, adjust TC's
+  global **Overflow handling** setting (`infinite` / `high value` / `zero`)
+  — not the bridge or the `.txt` def.
+
 ## Temperature (°C / °F)
 
 The meter reads temperature in either Celsius or Fahrenheit. The bridge
