@@ -14,24 +14,46 @@ Bridge a **Brymen BM78xBT** BLE multimeter into
 | Path | Purpose |
 | --- | --- |
 | `bridge/` | Python package: `emitter` (SingleValue formatting), `transports` (TCP server), `bridge` (reconnect loop), `cli` (entry point) |
-| `testcontroller/` | TestController device definition files (SingleValue driver) |
+| `testcontroller/BM78xBT.txt` | TestController device definition (SingleValue driver) |
 | `tools/simulate_meter.py` | Act as the bridge with fake readings — configure/test TestController without a meter |
-| `docs/setup.md` | Full step-by-step setup and troubleshooting |
 
-## Quick start
+## Setup
+
+### 1. Install the bridge
 
 ```powershell
 python -m venv .venv
 .venv\Scripts\python -m pip install -r requirements.txt
-.venv\Scripts\python -m bridge --mac 12:34:56:78:9A:BC
 ```
 
-Without `--mac`, the first BM78xBT found by scanning is used. Then, in
-TestController: **Load devices** → pick *Brymen BM78xBT* → connect to
-`localhost:6000`.
+`requirements.txt` installs `brymenble` in editable mode from `../brymenble`
+(the sibling SDK repo), which pulls in `bleak`. If the repos aren't siblings,
+edit `requirements.txt` to point at the real path (or `pip install ../brymenble`).
 
-See [`docs/setup.md`](docs/setup.md) for the full walkthrough, the multi-mode
-option, and how to verify the mode letters in TestController's debug mode.
+### 2. Run the bridge
+
+```powershell
+.venv\Scripts\python -m bridge 12:34:56:78:9A:BC
+```
+
+Without a MAC, the first BM78xBT found by scanning is used:
+
+```powershell
+.venv\Scripts\python -m bridge
+```
+
+The bridge listens on `localhost:6000` by default and reconnects to the meter
+forever if it powers off, so it can run unattended for long logs.
+
+### 3. Connect TestController
+
+1. Copy `testcontroller/BM78xBT.txt` into TestController's `Devices` folder.
+2. Start TestController.
+3. Go to the **Load devices** page.
+4. Select **Brymen BM78xBT** from the drop-down list.
+5. Press **Add**.
+6. Press **Reconnect** — TestController jumps to the **Commands** page.
+7. Press **Run**.
 
 ## Tests
 
@@ -48,11 +70,5 @@ base-unit scaling, mode tokens, overload/ASCII text) and the TCP line server
 
 ## Notes
 
-- The meter's function **cannot be switched over BLE** (documented protocol
-  has no control commands). The person turns the rotary switch; the bridge
-  follows and TestController logs the right units.
-- **TestController does not auto-reconnect its socket.** If the meter powers
-  off mid-test, the bridge reconnects to the meter on its own — but
-  TestController's Socket connection to the bridge is not re-established by
-  TestController. After a meter power cycle you must reconnect manually in
-  TestController.
+- The meter's function **cannot be switched over BLE/TestController.**
+- **TestController does not auto-reconnect its socket.** After a meter power cycle you must reconnect manually in TestController.

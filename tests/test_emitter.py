@@ -53,7 +53,7 @@ def test_overload_has_mode_and_trailing_space(make_reading):
 
 
 def test_overload_single_mode_has_no_mode(make_reading):
-    # Single-mode template has no {mode}: overload is "OL " (value + space).
+    # Template without {mode}: overload is "OL " (value + space).
     e = Emitter(line_format="{value} {unit}")
     assert e.format_reading(make_reading(is_overload=True)) == "OL "
 
@@ -83,7 +83,7 @@ def test_gap_line(make_reading):
     assert Emitter().gap_line() == "? "
     # Multi-mode: the last reading's mode token keeps a column to show "?" in.
     assert Emitter().gap_line(make_reading()) == "DCV ? "
-    # Single-mode template has no {mode}: no mode token.
+    # Template without {mode}: no mode token.
     e = Emitter(line_format="{value} {unit}")
     assert e.gap_line(make_reading()) == "? "
 

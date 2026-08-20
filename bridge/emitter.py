@@ -9,9 +9,9 @@ documentation) expects a device to emit one ASCII line per reading::
 The value is a plain decimal number; the unit (with SI prefix) follows as
 text. The optional leading ``<mode>`` is a token of letters that
 TestController uses to select a ``#value`` row — the exact letters it derives
-from the line must be verified in TestController's debug mode (see
-docs/setup.md); the tokens here match the selectors in
-``testcontroller/BM78xBT-MultiMode.txt``.
+from the line must be verified in TestController's debug mode (see the
+README); the tokens here match the selectors in
+``testcontroller/BM78xBT.txt``.
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ PREFIX_POWER = {"n": -9, "u": -6, "µ": -6, "m": -3, "": 0, "k": 3, "M": 6, "G":
 # Canonical SDK function name (constants.FUNCTION_NAMES) -> SingleValue mode
 # token (LETTERS ONLY — TestController absorbs any digit in the leading token
 # into the value, so tokens like "T1" would corrupt the reading). These tokens
-# match the selectors in testcontroller/BM78xBT-MultiMode.txt.
+# match the selectors in testcontroller/BM78xBT.txt.
 FUNCTION_TO_MODE: Dict[str, str] = {
     "LoZ-ACV": "LoZACV",
     "LoZ-DCV": "LoZDCV",
@@ -184,7 +184,7 @@ class Emitter:
         dedicated non-numeric ``#valueText`` token ``"?"`` makes TC show its "?"
         placeholder instead of a real reading. ``reading`` supplies the last
         known mode token so the multi-mode def still has a column to show the
-        "?" in; pass None for the single-mode def (no mode token).
+        "?" in; pass None for a template without ``{mode}`` (no mode token).
         """
         mode = self._mode_text(reading) if reading is not None else None
         prefix = f"{mode} " if ("{mode}" in self.line_format and mode) else ""

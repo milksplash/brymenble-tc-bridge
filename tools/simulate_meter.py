@@ -8,7 +8,7 @@ at ``--rate``; TestController sees the same lines the real bridge would send::
 
     python tools/simulate_meter.py [--port 6000] [--rate 1.0]
     python tools/simulate_meter.py --format "{mode} {si_value}"
-    python tools/simulate_meter.py --format "{value} {unit}"   # single-mode def
+    python tools/simulate_meter.py --format "{value} {unit}"   # custom template
 
 Interactive controls (Windows console — works in VS Code / PowerShell):
     n / Right  -> next sample
@@ -84,7 +84,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--format",
         default="{mode} {si_value}",
         help='line template, same as the bridge (default: "{mode} {si_value}"; '
-        'single-mode def: "{value} {unit}")',
+        'custom template: "{value} {unit}")',
     )
     p.add_argument(
         "--skip-bare",

@@ -5,7 +5,7 @@ Examples::
     python -m bridge --mac 12:34:56:78:9A:BC
     python -m bridge                          # scan for the first meter
     python -m bridge --port 7000 --host 127.0.0.1
-    python -m bridge --format "{mode} {value} {unit}"   # multi-mode
+    python -m bridge --format "{mode} {value} {unit}"   # custom template
 """
 
 from __future__ import annotations
@@ -61,8 +61,8 @@ def build_parser() -> argparse.ArgumentParser:
         default="{mode} {si_value}",
         help='SingleValue line template. Default: "{mode} {si_value}" '
         '(deterministic mode + base-unit value, matches '
-        'BM78xBT-MultiMode.txt). Placeholders: {mode} {si_value} {value} '
-        '{prefix} {unit}. Plain form (BM78xBT.txt): "{value} {unit}"',
+        'BM78xBT.txt). Placeholders: {mode} {si_value} {value} '
+        '{prefix} {unit}.',
     )
     p.add_argument(
         "--no-sync-rtc",
