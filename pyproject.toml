@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "brymenble-tc-bridge"
+version = "0.1.0"
+description = "Bridge a Brymen BM78xBT BLE multimeter into TestController (SingleValue over TCP)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [
+    { name = "Martin Chan" },
+]
+dependencies = [
+    "brymenble>=0.5.1",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+
+[project.urls]
+Homepage = "https://github.com/milksplash/brymenble-tc-bridge"
+Repository = "https://github.com/milksplash/brymenble-tc-bridge"
+Issues = "https://github.com/milksplash/brymenble-tc-bridge/issues"
+
+[tool.setuptools.packages.find]
+include = ["bridge*"]

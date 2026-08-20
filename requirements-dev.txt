@@ -1,4 +1,4 @@
-# Runtime deps (installs the SDK from ../brymenble, see README)
+# Runtime deps (brymenble SDK from PyPI, see README)
 -r requirements.txt
 
 # Test-only deps

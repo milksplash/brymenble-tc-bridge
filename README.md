@@ -1,4 +1,4 @@
-# brymen-tc-bridge
+# brymenble-tc-bridge TestController Bridge
 
 > **⚠️ Unofficial.** This is an independent, community-developed project. It is
 > **not affiliated with, endorsed by, or sponsored by** Brymen Technology Corporation. "Brymen" and the device model names are trademarks of their
@@ -28,9 +28,8 @@ python -m venv .venv
 .venv\Scripts\python -m pip install -r requirements.txt
 ```
 
-`requirements.txt` installs `brymenble` in editable mode from `../brymenble`
-(the sibling SDK repo), which pulls in `bleak`. If the repos aren't siblings,
-edit `requirements.txt` to point at the real path (or `pip install ../brymenble`).
+`requirements.txt` installs the `brymenble` SDK from PyPI (which pulls in its
+`bleak` dependency).
 
 ### 2. Run the bridge
 
