@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from brymen.parsers import ReadingPacket  # noqa: E402
+from brymenble.parsers import ReadingPacket  # noqa: E402
 
 
 @pytest.fixture

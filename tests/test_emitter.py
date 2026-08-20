@@ -103,7 +103,7 @@ def test_malformed_template_falls_back_to_plain(make_reading):
 
 
 def test_format_frame_skips_none_readings(make_reading):
-    from brymen.parsers import StreamFrame
+    from brymenble.parsers import StreamFrame
     frame = StreamFrame(
         info=None, readings=[make_reading(), None, make_reading(is_overload=True)]
     )

@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
-from brymen import ReadingPacket, StreamFrame
+from brymenble import ReadingPacket, StreamFrame
 
 # Unit symbol -> ASCII-safe text. TestController reads lines as ISO-8859-1,
 # where the Greek "Ω" is not representable (would become "?"). "°C"/"°F" are

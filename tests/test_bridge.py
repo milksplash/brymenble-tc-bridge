@@ -8,7 +8,7 @@ import asyncio
 
 import pytest
 
-from brymen.parsers import StreamFrame
+from brymenble.parsers import StreamFrame
 
 from bridge.bridge import run_bridge
 from bridge.emitter import Emitter
@@ -39,7 +39,7 @@ class FakeServer:
 
 
 class FakeClient:
-    """A BrymenClient stand-in: yields ``frames`` once, then a link-up gap.
+    """A BrymenbleClient stand-in: yields ``frames`` once, then a link-up gap.
 
     ``is_connected`` is a plain attribute so a test can simulate a link drop
     (power-off): after ``drop_after`` frames are yielded it flips to False.

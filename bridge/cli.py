@@ -15,7 +15,7 @@ import asyncio
 import logging
 import sys
 
-from brymen import DEFAULT_PASSWORD, console, find_first_meter
+from brymenble import DEFAULT_PASSWORD, console, find_first_meter
 
 from .bridge import run_bridge
 from .emitter import Emitter

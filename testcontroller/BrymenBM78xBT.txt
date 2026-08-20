@@ -52,7 +52,7 @@
 #value TC C si TC
 #value TD C si TD
 #value TCD C si TCD
-#value AUTO - si AUTO
+#value AUTO V si AUTO
 #value LoZACV V si LoZACV
 #value LoZDCV V si LoZDCV
 #value VFDAC V si VFDAC

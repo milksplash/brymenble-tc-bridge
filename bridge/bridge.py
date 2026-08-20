@@ -20,7 +20,7 @@ import time
 if __package__ in (None, ""):
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from brymen import BrymenClient
+from brymenble import BrymenbleClient
 
 from bridge.emitter import Emitter
 from bridge.transports import TcpLineServer
@@ -51,7 +51,7 @@ async def run_bridge(
     Runs until cancelled. The meter is reconnected forever (it may power off
     mid-test). ``pause_cap`` bounds how long a BLE-link-up silence is
     tolerated before a reconnect is forced anyway (e.g. the link-state report
-    lags behind a real power-off). It maps onto ``BrymenClient.read_stream()``,
+    lags behind a real power-off). It maps onto ``BrymenbleClient.read_stream()``,
     which owns the pause-vs-power-off decision (using its ``no_data_timeout``
     default to check the link state).
 
@@ -64,11 +64,11 @@ async def run_bridge(
     disables the keep-alive.
 
     ``client_factory`` is a test seam: a zero-arg callable returning the
-    ``BrymenClient`` (or a fake) to drive. Defaults to a real client for
+    ``BrymenbleClient`` (or a fake) to drive. Defaults to a real client for
     ``mac``/``password``/``sync_rtc``.
     """
     if client_factory is None:
-        client_factory = lambda: BrymenClient(  # noqa: E731
+        client_factory = lambda: BrymenbleClient(  # noqa: E731
             mac, password, sync_rtc_on_connect=sync_rtc
         )
     client = client_factory()
