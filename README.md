@@ -72,3 +72,27 @@ base-unit scaling, mode tokens, overload/ASCII text) and the TCP line server
 
 - The meter's function **cannot be switched over BLE/TestController.**
 - **TestController does not auto-reconnect its socket.** After a meter power cycle you must reconnect manually in TestController.
+
+## Known limitations
+
+- **Mode tokens must be letters-only.** TestController's SingleValue driver
+  absorbs any digit in the leading token into the value, so a token like
+  `T1` would corrupt the reading (e.g. `T1 25.60` parses as `125.60`). The
+  bridge therefore maps the temperature functions to letters-only tokens
+  (`T1`→`TEMPONE`, `T2`→`TEMPTWO`, `T1-T2`→`TEMPDIFF`).
+
+## Temperature (°C / °F)
+
+The meter reads temperature in either Celsius or Fahrenheit. The bridge
+encodes the unit in the mode token's last letter so TestController selects
+the correct `#value` row:
+
+| Function | °C token | °F token |
+| --- | --- | --- |
+| T1 | `TEMPONEC` | `TEMPONEF` |
+| T2 | `TEMPTWOC` | `TEMPTWOF` |
+| T1-T2 | `TEMPDIFFC` | `TEMPDIFFF` |
+
+The value is emitted as-is (temperature has no SI prefix, so no scaling is
+applied). The `testcontroller/BM78xBT.txt` def has matching `C` and `F`
+rows for each token.

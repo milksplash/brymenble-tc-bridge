@@ -63,8 +63,11 @@ def test_temperature_overload_shows_dashes(make_reading):
     # "----" for a temperature overload even though the SDK reports plain "OL"
     # (the protocol only sends the OL flag — see captures cap-010).
     assert Emitter().format_reading(
-        make_reading(function_name="T1", is_overload=True)
-    ) == "TC ---- "
+        make_reading(function_name="T1", unit="°C", is_overload=True)
+    ) == "TEMPONEC ---- "
+    assert Emitter().format_reading(
+        make_reading(function_name="T1", unit="°F", is_overload=True)
+    ) == "TEMPONEF ---- "
     # Non-temperature overloads still emit "OL".
     assert Emitter().format_reading(
         make_reading(function_name="Resistance", is_overload=True)
@@ -91,10 +94,23 @@ def test_gap_line(make_reading):
 def test_mode_tokens(make_reading):
     e = Emitter()
     assert e._mode_text(make_reading(function_name="DC+ACV")) == "DCACV"
-    assert e._mode_text(make_reading(function_name="T1")) == "TC"
+    assert e._mode_text(make_reading(function_name="T1", unit="°C")) == "TEMPONEC"
+    assert e._mode_text(make_reading(function_name="T1", unit="°F")) == "TEMPONEF"
+    assert e._mode_text(make_reading(function_name="T2", unit="°F")) == "TEMPTWOF"
+    assert e._mode_text(make_reading(function_name="T1-T2", unit="°F")) == "TEMPDIFFF"
     assert e._mode_text(make_reading(function_name="Capacitance")) == "CAP"
     # Unknown function -> letters-only fallback from the canonical name.
     assert e._mode_text(make_reading(function_name="Mystery Mode")) == "MysteryMode"
+
+
+def test_fahrenheit_numeric(make_reading):
+    # A Fahrenheit reading emits the °F mode token so TestController selects
+    # the F #value row (the value itself is already in °F — no scaling).
+    r = make_reading(
+        function_name="T1", unit="°F", mantissa=7700,
+        decimal_pos=2, display_digit_count=4,
+    )
+    assert Emitter().format_reading(r) == "TEMPONEF 77.00"
 
 
 def test_malformed_template_falls_back_to_plain(make_reading):

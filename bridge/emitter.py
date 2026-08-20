@@ -59,9 +59,9 @@ FUNCTION_TO_MODE: Dict[str, str] = {
     "ACA": "ACA",
     "DCA": "DCA",
     "DC+ACA": "DCACA",
-    "T1": "TC",
-    "T2": "TD",
-    "T1-T2": "TCD",
+    "T1": "TEMPONE",
+    "T2": "TEMPTWO",
+    "T1-T2": "TEMPDIFF",
     "Resistance": "RES",
     "Capacitance": "CAP",
     "Continuity": "CONT",
@@ -91,6 +91,15 @@ GAP_TEXT = "?"
 # T1/T2/T1-T2, and the defs have a matching "#valueText \"----\"" row.
 TEMP_OVERLOAD_FUNCTIONS = ("T1", "T2", "T1-T2")
 TEMP_OVERLOAD_TEXT = "----"
+
+# Temperature functions read in °C or °F. The mode token must be letters-only
+# (TestController absorbs any digit in the leading token into the value, so
+# "T1"/"T2" would corrupt the reading) AND unique per (function, unit) so it
+# selects the right #value row. The last letter encodes the unit: C = Celsius,
+# F = Fahrenheit. These match the selectors in testcontroller/BM78xBT.txt.
+TEMP_FUNCTIONS = ("T1", "T2", "T1-T2")
+TEMP_MODE_C = {"T1": "TEMPONEC", "T2": "TEMPTWOC", "T1-T2": "TEMPDIFFC"}
+TEMP_MODE_F = {"T1": "TEMPONEF", "T2": "TEMPTWOF", "T1-T2": "TEMPDIFFF"}
 
 
 class Emitter:
@@ -246,7 +255,15 @@ class Emitter:
         return f"{self._prefix_text(reading)}{self._unit_base_text(reading)}"
 
     def _mode_text(self, reading: ReadingPacket) -> str:
-        """Mode token for the line (letters only, ASCII-safe)."""
+        """Mode token for the line (letters only, ASCII-safe).
+
+        Temperature functions (T1/T2/T1-T2) read in °C or °F; the token
+        encodes the unit (last letter C or F) so TestController selects the
+        matching #value row. Other functions use FUNCTION_TO_MODE.
+        """
+        if reading.function_name in TEMP_FUNCTIONS:
+            table = TEMP_MODE_F if reading.unit == "°F" else TEMP_MODE_C
+            return table[reading.function_name]
         token = self._modes.get(reading.function_name)
         if token is not None:
             return token

@@ -49,9 +49,12 @@
 #value COND S si COND
 #value DUTY % si DUTY
 #value LOGIC Hz si LOGIC
-#value TC C si TC
-#value TD C si TD
-#value TCD C si TCD
+#value TEMPONEC C si TEMPONEC
+#value TEMPONEF F si TEMPONEF
+#value TEMPTWOC C si TEMPTWOC
+#value TEMPTWOF F si TEMPTWOF
+#value TEMPDIFFC C si TEMPDIFFC
+#value TEMPDIFFF F si TEMPDIFFF
 #value AUTO V si AUTO
 #value LoZACV V si LoZACV
 #value LoZDCV V si LoZDCV

@@ -62,7 +62,8 @@ SAMPLES = [
     ("DCuA", "88.90", "uA"),
     ("DUTY", "50.00", "%"),
     ("CAP", "1.234", "uF"),
-    ("TC", "25.60", "C"),  # T1 on the meter -> bridge mode token "TC"
+    ("TEMPONEC", "25.60", "C"),  # T1 in °C -> bridge mode token "TEMPONEC"
+    ("TEMPONEF", "77.00", "F"),  # T1 in °F -> bridge mode token "TEMPONEF"
 
     # Overload (never bare — trailing unit required)
     ("DCV", "OL", "V"),
