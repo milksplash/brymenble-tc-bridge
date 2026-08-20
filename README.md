@@ -8,24 +8,6 @@ Bridge a **Brymen BM78xBT** BLE multimeter into
 [**TestController**](https://lygte-info.dk/project/TestControllerIntro%20UK.html)
 (lygte-info.dk's freeware multi-device test & logging tool).
 
-TestController has no native BLE transport, and the BM78xBT exposes no
-documented remote-control commands — so this project does the only thing the
-protocol supports: it connects over BLE with the
-[`brymenble`](https://github.com/your-org/brymenble) SDK, decodes the meter's
-stream, and re-emits each reading as an ASCII **SingleValue** line that
-TestController logs like any other instrument.
-
-```
-BM78xBT ──BLE──▶ brymen-tc-bridge ──TCP socket──▶ TestController (SingleValue driver)
-                      │
-              brymenble SDK decodes
-              value, unit, prefix, function, flags
-```
-
-Because the BM78xBT *reports* its current function/unit in every frame, the
-bridge can tag each line with a **mode token**, so TestController shows the
-correct column and unit as you turn the rotary switch — no meter control
-required (see `testcontroller/BM78xBT-MultiMode.txt`).
 
 ## Layout
 
@@ -69,15 +51,8 @@ base-unit scaling, mode tokens, overload/ASCII text) and the TCP line server
 - The meter's function **cannot be switched over BLE** (documented protocol
   has no control commands). The person turns the rotary switch; the bridge
   follows and TestController logs the right units.
-- TestController reads one line per reading; the bridge reconnects
-  automatically if the meter powers off, and never crashes.
 - **TestController does not auto-reconnect its socket.** If the meter powers
   off mid-test, the bridge reconnects to the meter on its own — but
   TestController's Socket connection to the bridge is not re-established by
   TestController. After a meter power cycle you must reconnect manually in
-  TestController (disconnect then connect the device again). This is
-  TestController behaviour, not something the bridge can fix.
-- Units are emitted ASCII-safe (`Ω` → `Ohm`, `µ` → `u`) because TestController
-  reads lines as ISO-8859-1.
-
-Unofficial / community project — not affiliated with Brymen or lygte-info.
+  TestController.
