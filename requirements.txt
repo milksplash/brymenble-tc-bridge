@@ -1,2 +1,2 @@
 # The brymenble SDK (pulls in bleak), from PyPI:
-brymenble>=0.5.1
+brymenble>=0.5.2

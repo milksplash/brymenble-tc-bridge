@@ -13,7 +13,7 @@ authors = [
     { name = "Martin Chan" },
 ]
 dependencies = [
-    "brymenble>=0.5.1",
+    "brymenble>=0.5.2",
 ]
 
 [project.optional-dependencies]
