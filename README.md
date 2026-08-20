@@ -4,6 +4,8 @@
 > **not affiliated with, endorsed by, or sponsored by** Brymen Technology Corporation. "Brymen" and the device model names are trademarks of their
 > respective owners.
 
+![](img/showcase.png)
+
 Bridge a **Brymen BM78xBT** BLE multimeter into
 [**TestController**](https://lygte-info.dk/project/TestControllerIntro%20UK.html)
 (lygte-info.dk's freeware multi-device test & logging tool).
@@ -32,18 +34,18 @@ edit `requirements.txt` to point at the real path (or `pip install ../brymenble`
 
 ### 2. Run the bridge
 
+Explicit — MAC, custom password and port:
+
 ```powershell
-.venv\Scripts\python -m bridge 12:34:56:78:9A:BC
+.venv\Scripts\python -m bridge 12:34:56:78:9A:BC --password 4321 --port 7000
 ```
 
-Without a MAC, the first BM78xBT found by scanning is used:
+Without a MAC, the first BM78xBT found by scanning is used (defaults:
+password `0000`, port `6000`):
 
 ```powershell
 .venv\Scripts\python -m bridge
 ```
-
-The bridge listens on `localhost:6000` by default and reconnects to the meter
-forever if it powers off, so it can run unattended for long logs.
 
 ### 3. Connect TestController
 
@@ -73,35 +75,9 @@ base-unit scaling, mode tokens, overload/ASCII text) and the TCP line server
 - The meter's function **cannot be switched over BLE/TestController.**
 - **TestController does not auto-reconnect its socket.** After a meter power cycle you must reconnect manually in TestController.
 
-## Known limitations
+## License
 
-- **Mode tokens must be letters-only.** TestController's SingleValue driver
-  absorbs any digit in the leading token into the value, so a token like
-  `T1` would corrupt the reading (e.g. `T1 25.60` parses as `125.60`). The
-  bridge therefore maps the temperature functions to letters-only tokens
-  (`T1`→`TEMPONE`, `T2`→`TEMPTWO`, `T1-T2`→`TEMPDIFF`).
+MIT — see [LICENSE](LICENSE).
 
-- **Overload shows as `∞` in TestController, not `OL`.** TC's SingleValue
-  driver hardcodes the `#valueText` values `OL`/`-OL` to its overflow
-  representation, which (default "Overflow handling = infinite") renders as
-  the infinity symbol `∞` — the "inf" you may see on the meter. TestController
-  cannot display the literal text `OL` for any DMM (verified in its
-  `DeviceSingleValue` driver). To change what overload shows, adjust TC's
-  global **Overflow handling** setting (`infinite` / `high value` / `zero`)
-  — not the bridge or the `.txt` def.
-
-## Temperature (°C / °F)
-
-The meter reads temperature in either Celsius or Fahrenheit. The bridge
-encodes the unit in the mode token's last letter so TestController selects
-the correct `#value` row:
-
-| Function | °C token | °F token |
-| --- | --- | --- |
-| T1 | `TEMPONEC` | `TEMPONEF` |
-| T2 | `TEMPTWOC` | `TEMPTWOF` |
-| T1-T2 | `TEMPDIFFC` | `TEMPDIFFF` |
-
-The value is emitted as-is (temperature has no SI prefix, so no scaling is
-applied). The `testcontroller/BM78xBT.txt` def has matching `C` and `F`
-rows for each token.
+"Brymen" and the device model names are trademarks of their respective owners;
+this project is not affiliated with or endorsed by Brymen Technology Corporation.

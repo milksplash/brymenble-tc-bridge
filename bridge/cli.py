@@ -4,7 +4,7 @@ Examples::
 
     python -m bridge --mac 12:34:56:78:9A:BC
     python -m bridge                          # scan for the first meter
-    python -m bridge --port 7000 --host 127.0.0.1
+    python -m bridge --password 4321 --port 7000 --host 127.0.0.1
     python -m bridge --format "{mode} {value} {unit}"   # custom template
 """
 
