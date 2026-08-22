@@ -19,9 +19,15 @@ Bridge a **Brymen BM78xBT** BLE multimeter into
 | `testcontroller/BM78xBT.txt` | TestController device definition (SingleValue driver) |
 | `tools/simulate_meter.py` | Act as the bridge with fake readings — configure/test TestController without a meter |
 
-## Setup
+## Install
 
-### 1. Install the bridge
+### Option A — Windows binary (no Python needed)
+
+Download `brymenble-tc-bridge.exe` from the latest
+[release](https://github.com/milksplash/brymenble-tc-bridge/releases) and
+double-click it. No Python or dependencies are required.
+
+### Option B — from source
 
 ```powershell
 python -m venv .venv
@@ -31,7 +37,7 @@ python -m venv .venv
 `requirements.txt` installs the `brymenble` SDK from PyPI (which pulls in its
 `bleak` dependency).
 
-### 2. Run the bridge
+## Run
 
 Explicit — MAC, custom password and port:
 
@@ -46,7 +52,13 @@ password `0000`, port `6000`):
 .venv\Scripts\python -m bridge
 ```
 
-### 3. Connect TestController
+The Windows binary accepts the same arguments:
+
+```powershell
+brymenble-tc-bridge.exe 12:34:56:78:9A:BC --password 4321 --port 7000
+```
+
+## Connect TestController
 
 1. Copy `testcontroller/BM78xBT.txt` into TestController's `Devices` folder.
 2. Start TestController.
