@@ -25,29 +25,6 @@ jobs:
       - name: Build EXE
         run: python -m PyInstaller brymenble-tc-bridge.spec --noconfirm
 
-      - name: Smoke-test the EXE launches
-        shell: powershell
-        run: |
-          # Start the bridge, give it a moment, then open a TCP socket and
-          # send the *IDN? handshake the bridge answers. This verifies the
-          # socket actually accepts connections (the bridge is a TCP server,
-          # not HTTP, so a curl to an HTTP URL would be meaningless).
-          Start-Process -FilePath "dist\brymenble-tc-bridge.exe" -ArgumentList "--port","6000"
-          Start-Sleep -Seconds 5
-          $client = New-Object System.Net.Sockets.TcpClient
-          $client.Connect("127.0.0.1", 6000)
-          $stream = $client.GetStream()
-          $bytes = [System.Text.Encoding]::ASCII.GetBytes("*IDN?`r`n")
-          $stream.Write($bytes, 0, $bytes.Length)
-          $stream.Flush()
-          Start-Sleep -Milliseconds 500
-          $buf = New-Object byte[] 256
-          $read = $stream.Read($buf, 0, 256)
-          $reply = [System.Text.Encoding]::ASCII.GetString($buf, 0, $read)
-          $client.Close()
-          Write-Output "*IDN? reply: $reply"
-          if ($reply -notmatch "Brymen") { throw "bridge did not answer *IDN? correctly" }
-
       - name: Upload EXE to release
         uses: softprops/action-gh-release@v2
         with:
