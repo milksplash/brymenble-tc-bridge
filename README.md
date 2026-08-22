@@ -60,7 +60,7 @@ brymenble-tc-bridge.exe 12:34:56:78:9A:BC --password 4321 --port 7000
 
 ## Connect TestController
 
-1. Copy `testcontroller/BM78xBT.txt` into TestController's `Devices` folder.
+1. Copy `testcontroller/BrymenBM78xBT.txt` into TestController's `Devices` folder.
 2. Start TestController.
 3. Go to the **Load devices** page.
 4. Select **Brymen BM78xBT** from the drop-down list.
