@@ -4,7 +4,45 @@ These lock down the ASCII-safe conversions (Ω→Ohm, µ→u), the base-unit
 ``si_value`` scaling, the letters-only mode tokens, and the overload/ASCII
 trailing-space behaviour that TestController relies on.
 """
-from bridge.emitter import Emitter
+import re
+from pathlib import Path
+
+from bridge.emitter import (
+    FUNCTION_TO_MODE, TEMP_MODE_C, TEMP_MODE_F, Emitter,
+)
+
+ROOT = Path(__file__).resolve().parents[1]
+TXT = ROOT / "testcontroller" / "BrymenBM78xBT.txt"
+
+
+def _txt_selectors() -> set:
+    """Every mode selector from the `#value <selector> ...` rows in the .txt."""
+    selectors = set()
+    for line in TXT.read_text(encoding="utf-8").splitlines():
+        m = re.match(r"#value\s+(\S+)", line)
+        if m:
+            selectors.add(m.group(1))
+    return selectors
+
+
+def test_emitter_tokens_match_txt_selectors():
+    # Every mode token the emitter can emit must have a matching #value row in
+    # testcontroller/BrymenBM78xBT.txt, or TestController can't map the
+    # function to a value row (this is how the LINE vs LINEHz bug slipped
+    # through). The symmetric difference must be empty.
+    emitter_tokens = (
+        set(FUNCTION_TO_MODE.values())
+        | set(TEMP_MODE_C.values())
+        | set(TEMP_MODE_F.values())
+    )
+    txt_selectors = _txt_selectors()
+    assert emitter_tokens - txt_selectors == set(), (
+        f"emitter tokens missing from BM78xBT.txt: "
+        f"{sorted(emitter_tokens - txt_selectors)}"
+    )
+    assert txt_selectors - emitter_tokens == set(), (
+        f"BM78xBT.txt selectors not emitted: {sorted(txt_selectors - emitter_tokens)}"
+    )
 
 
 def test_numeric_default_format(make_reading):
