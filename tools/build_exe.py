@@ -19,7 +19,7 @@ def main() -> int:
     if not spec.exists():
         print(f"missing spec: {spec}", file=sys.stderr)
         return 1
-    cmd = [sys.executable, "-m", "PyInstaller", str(spec), "--noconfirm"]
+    cmd = [sys.executable, "-m", "PyInstaller", str(spec), "--noconfirm", "--clean"]
     print(" ".join(cmd))
     return subprocess.call(cmd, cwd=ROOT)
 
