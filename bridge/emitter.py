@@ -71,7 +71,7 @@ FUNCTION_TO_MODE: Dict[str, str] = {
     "Logic-Hz": "LOGIC",
     "EF-Lo": "EFLO",
     "EF-Hi": "EFHI",
-    "Hz of Line Signal": "LINE",
+    "Hz of Line Signal": "LINEHz",
 }
 
 # Text emitted for an overload reading. SingleValue maps this via #valueText.

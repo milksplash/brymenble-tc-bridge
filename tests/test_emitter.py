@@ -99,6 +99,10 @@ def test_mode_tokens(make_reading):
     assert e._mode_text(make_reading(function_name="T2", unit="°F")) == "TEMPTWOF"
     assert e._mode_text(make_reading(function_name="T1-T2", unit="°F")) == "TEMPDIFFF"
     assert e._mode_text(make_reading(function_name="Capacitance")) == "CAP"
+    # Hz functions follow the Hz-suffix convention (must match the #value
+    # selectors in testcontroller/BrymenBM78xBT.txt: VFDHz / LINEHz).
+    assert e._mode_text(make_reading(function_name="Hz of VFD-ACV")) == "VFDHz"
+    assert e._mode_text(make_reading(function_name="Hz of Line Signal")) == "LINEHz"
     # Unknown function -> letters-only fallback from the canonical name.
     assert e._mode_text(make_reading(function_name="Mystery Mode")) == "MysteryMode"
 
