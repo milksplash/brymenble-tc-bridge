@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "brymenble-tc-bridge"
-version = "0.1.1"
+version = "0.1.2"
 description = "Bridge a Brymen BM78xBT BLE multimeter into TestController (SingleValue over TCP)"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -13,7 +13,7 @@ authors = [
     { name = "Martin Chan" },
 ]
 dependencies = [
-    "brymenble>=0.5.2",
+    "brymenble>=0.5.3",
 ]
 
 [project.optional-dependencies]
