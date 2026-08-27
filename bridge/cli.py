@@ -109,8 +109,7 @@ async def _amain(args: argparse.Namespace) -> int:
     await server.start()
     console.status(
         f"listening on {args.host}:{server.bound_port} — point TestController "
-        f"at #port {server.bound_port}",
-        stream=sys.stderr,
+        f"at #port {server.bound_port}"
     )
 
     mac = args.mac

@@ -12,11 +12,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
         with:
-          path: bridge
+          path: bridge-repo
       # The bridge depends on the brymenble SDK (same-org sibling repo).
       # Adjust `repository` if the SDK lives elsewhere.
       - name: Checkout SDK (same-org sibling repo)
@@ -34,5 +34,5 @@ jobs:
           pip install pytest
       - name: Run tests
         run: |
-          cd bridge
+          cd bridge-repo
           python -m pytest -q

@@ -21,6 +21,9 @@ test = [
     "pytest",
 ]
 
+[project.scripts]
+brymenble-tc-bridge = "bridge.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/milksplash/brymenble-tc-bridge"
 Repository = "https://github.com/milksplash/brymenble-tc-bridge"

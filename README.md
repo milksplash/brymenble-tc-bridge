@@ -103,8 +103,9 @@ Offline unit tests (no meter or TestController needed):
 ```
 
 These cover the SingleValue emitter (`bridge/emitter.py` — ASCII-safe units,
-base-unit scaling, mode tokens, overload/ASCII text) and the TCP line server
-(`bridge/transports.py` — framing and the `*IDN?` handshake).
+base-unit scaling, mode tokens, overload/ASCII text), the TCP line server
+(`bridge/transports.py` — framing, the `*IDN?` handshake, and the slow-client
+guard), and the keep-alive reconnect loop (`bridge/bridge.py`).
 
 ## Notes
 
