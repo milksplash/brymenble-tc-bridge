@@ -66,7 +66,7 @@ class TcpLineServer:
     other clients — it just fills its queue and is dropped.
     """
 
-    def __init__(self, host: str = "0.0.0.0", port: int = 6000) -> None:
+    def __init__(self, host: str = "127.0.0.1", port: int = 6000) -> None:
         self.host = host
         self.port = port
         self._server: Optional[asyncio.AbstractServer] = None

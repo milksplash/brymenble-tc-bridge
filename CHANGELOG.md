@@ -22,6 +22,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Default TCP bind is now `127.0.0.1`** — the bridge no longer listens on
+  all interfaces by default. LAN access is opt-in via `--host 0.0.0.0`, so the
+  TCP socket is not exposed to the network unless explicitly requested
+  (TestController connects to localhost by default).
 - **A stalled TCP client can no longer stall the whole bridge** — each client
   now gets its own bounded outbound queue drained by a background task, so a
   slow reader fills its queue and is dropped instead of blocking the event

@@ -47,6 +47,15 @@ password `0000`, port `6000`):
 .venv\Scripts\python -m bridge
 ```
 
+The bridge listens on `127.0.0.1` (loopback) by default, so only this machine
+can reach the TCP socket — matching TestController, which connects to
+localhost by default. To let TestController on another machine on the local
+network connect, pass `--host 0.0.0.0`:
+
+```powershell
+.venv\Scripts\python -m bridge --host 0.0.0.0
+```
+
 The Windows binary accepts the same arguments:
 
 ```powershell

@@ -46,9 +46,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument(
         "--host",
-        default="0.0.0.0",
-        help="address to listen on (default: all interfaces; use 127.0.0.1 "
-        "to restrict to this machine)",
+        default="127.0.0.1",
+        help="address to listen on (default: 127.0.0.1 = this machine only; "
+        "use 0.0.0.0 to expose to the LAN for TestController on another "
+        "machine)",
     )
     p.add_argument(
         "--port",
