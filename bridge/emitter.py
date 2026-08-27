@@ -59,9 +59,6 @@ FUNCTION_TO_MODE: Dict[str, str] = {
     "ACA": "ACA",
     "DCA": "DCA",
     "DC+ACA": "DCACA",
-    "T1": "TEMPONE",
-    "T2": "TEMPTWO",
-    "T1-T2": "TEMPDIFF",
     "Resistance": "RES",
     "Capacitance": "CAP",
     "Continuity": "CONT",
@@ -162,6 +159,8 @@ class Emitter:
     def format_reading(self, reading: ReadingPacket) -> Optional[str]:
         """Format one reading, or None if nothing sensible can be emitted."""
         value = self._value_text(reading)
+        # Defensive: _value_text always returns a string (never None), so this
+        # is normally unreachable — kept as a guard.
         if value is None:
             return None
         if reading.is_overload or reading.is_ascii:
@@ -221,6 +220,9 @@ class Emitter:
         if reading.is_ascii:
             return reading.ascii_text if reading.ascii_text else OVERLOAD_TEXT
         value = reading.value
+        # Defensive: ReadingPacket.value is None iff is_overload or is_ascii
+        # (handled above), so this is normally unreachable — kept as a guard
+        # against a future SDK invariant change.
         if value is None:
             return OVERLOAD_TEXT
         # mantissa is an integer scaled by 10**decimals, so formatting to the
@@ -236,6 +238,9 @@ class Emitter:
         (e.g. ``#value DCmV V si DCmV``) shows "45.30m" correctly.
         """
         value = reading.value
+        # Defensive: only reached in the numeric path (overload/ASCII handled
+        # in format_reading), so value is normally not None — kept as a guard
+        # against a future SDK invariant change.
         if value is None:
             return OVERLOAD_TEXT
         power = PREFIX_POWER.get(reading.prefix, 0)
