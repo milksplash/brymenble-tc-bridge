@@ -14,6 +14,45 @@ from typing import List, Optional
 
 log = logging.getLogger(__name__)
 
+# Max outbound lines buffered per client before it is considered too slow and
+# dropped. Bounds memory use and the slow-consumer case: a client that stops
+# reading fills its queue and is dropped instead of stalling the whole event
+# loop (see TcpLineServer.send).
+_MAX_QUEUED_LINES = 1000
+
+
+class _Client:
+    """Per-client outbound state: a bounded queue plus a drain task.
+
+    ``send()`` only enqueues (non-blocking); a background task drains the
+    queue and writes to the socket. A slow reader fills the queue and is
+    dropped, but never blocks the event loop or other clients.
+    """
+
+    def __init__(self, writer: asyncio.StreamWriter) -> None:
+        self.writer = writer
+        self.queue: "asyncio.Queue[bytes]" = asyncio.Queue(maxsize=_MAX_QUEUED_LINES)
+        self.task: Optional[asyncio.Task] = None
+
+    def start(self) -> None:
+        self.task = asyncio.create_task(self._drain_loop())
+
+    async def _drain_loop(self) -> None:
+        try:
+            while True:
+                data = await self.queue.get()
+                self.writer.write(data)
+                await self.writer.drain()
+        except (ConnectionError, OSError, RuntimeError):
+            pass
+        except asyncio.CancelledError:
+            raise
+        finally:
+            try:
+                self.writer.close()
+            except Exception:  # pragma: no cover - defensive
+                pass
+
 
 class TcpLineServer:
     """Accept TCP clients and broadcast lines (LF-terminated, ISO-8859-1).
@@ -21,13 +60,17 @@ class TcpLineServer:
     TestController (SingleValue driver, Socket interface) is the typical
     client. Multiple concurrent clients are supported (e.g. TestController
     plus a debug terminal / `tools/simulate_meter.py`).
+
+    Each client gets its own bounded outbound queue drained by a background
+    task, so a slow (stalled) reader can never block the event loop or the
+    other clients — it just fills its queue and is dropped.
     """
 
     def __init__(self, host: str = "0.0.0.0", port: int = 6000) -> None:
         self.host = host
         self.port = port
         self._server: Optional[asyncio.AbstractServer] = None
-        self._writers: List[asyncio.StreamWriter] = []
+        self._clients: List[_Client] = []
 
     async def start(self) -> None:
         """Bind the listening socket. Idempotent: a second call is a no-op.
@@ -50,27 +93,28 @@ class TcpLineServer:
         return self._server.sockets[0].getsockname()[1]
 
     def client_count(self) -> int:
-        return len(self._writers)
+        return len(self._clients)
 
     async def send(self, line: str) -> None:
-        """Write one line to every connected client; drop dead writers."""
-        if not self._writers:
+        """Enqueue one line to every connected client; drop slow/dead clients.
+
+        This never blocks on a client's socket: each line is put on the
+        client's bounded outbound queue (non-blocking). A client whose queue
+        is full (a stalled reader) is dropped, so it can't stall the event
+        loop or the other clients.
+        """
+        if not self._clients:
             return
         data = (line + "\n").encode("latin-1", "replace")
-        for writer in list(self._writers):
+        for client in list(self._clients):
             try:
-                writer.write(data)
-                await writer.drain()
-            except (ConnectionError, OSError, RuntimeError):
-                self._drop(writer)
+                client.queue.put_nowait(data)
+            except asyncio.QueueFull:
+                self._drop(client)
 
     async def close(self) -> None:
-        for writer in list(self._writers):
-            try:
-                writer.close()
-            except Exception:  # pragma: no cover - defensive
-                pass
-        self._writers.clear()
+        for client in list(self._clients):
+            self._drop(client)
         if self._server is not None:
             self._server.close()
             await self._server.wait_closed()
@@ -82,8 +126,10 @@ class TcpLineServer:
         self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
     ) -> None:
         peer = writer.get_extra_info("peername")
-        self._writers.append(writer)
-        log.info("client connected: %s (%d connected)", peer, len(self._writers))
+        client = _Client(writer)
+        self._clients.append(client)
+        client.start()
+        log.info("client connected: %s (%d connected)", peer, len(self._clients))
         try:
             while True:
                 data = await reader.read(256)
@@ -100,13 +146,15 @@ class TcpLineServer:
         except (ConnectionError, OSError):
             pass
         finally:
-            self._drop(writer)
-            log.info("client disconnected: %s (%d connected)", peer, len(self._writers))
+            self._drop(client)
+            log.info("client disconnected: %s (%d connected)", peer, len(self._clients))
 
-    def _drop(self, writer: asyncio.StreamWriter) -> None:
-        if writer in self._writers:
-            self._writers.remove(writer)
+    def _drop(self, client: _Client) -> None:
+        if client in self._clients:
+            self._clients.remove(client)
+        if client.task is not None:
+            client.task.cancel()
         try:
-            writer.close()
+            client.writer.close()
         except Exception:  # pragma: no cover - defensive
             pass
