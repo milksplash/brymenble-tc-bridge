@@ -255,7 +255,10 @@ def _read_keys(loop, commands) -> None:
 async def _amain(args: argparse.Namespace) -> int:
     samples = SAMPLES
     if args.skip_bare:
-        samples = [s for s in SAMPLES if s[1] is not None] or SAMPLES
+        # "Bare" = non-numeric text states (OL, Auto, InEr, ...) that drop the
+        # TestController connection. No sample stores value=None, so filter on
+        # whether the value looks numeric rather than `is not None`.
+        samples = [s for s in SAMPLES if _looks_numeric(s[1])] or SAMPLES
     server = TcpLineServer(host=args.host, port=args.port)
     await server.start()
     print(
