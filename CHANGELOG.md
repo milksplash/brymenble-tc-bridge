@@ -8,6 +8,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **`test_slow_client_does_not_stall_send` is now deterministic** — it
+  previously relied on overflowing the socket/transport buffers with 2000
+  lines, which varied by Python version and OS and flaked on CI (3.9/3.10/3.11).
+  It now fills the client's bounded queue directly to simulate the stalled
+  reader, so the drop-on-full behaviour is asserted reliably.
 - **`"Hz of Line Signal"` now emits the `LINEHz` mode token** — it previously
   emitted `LINE`, which had no matching `#value` row in
   `testcontroller/BrymenBM78xBT.txt`, so TestController couldn't map the

@@ -69,23 +69,26 @@ def test_send_with_no_clients_is_noop():
 def test_slow_client_does_not_stall_send():
     # A client that never reads fills its bounded outbound queue; send() must
     # drop it rather than stall the whole event loop (the classic
-    # slow-consumer foot-gun).
+    # slow-consumer foot-gun). We simulate the stalled reader by filling the
+    # client's bounded queue directly (in real life the drain task is blocked
+    # on a full socket), then assert send() drops it promptly.
     async def _run():
         server = TcpLineServer(host="127.0.0.1", port=0)
         await server.start()
         try:
-            reader, writer = await asyncio.open_connection(
+            _reader, writer = await asyncio.open_connection(
                 "127.0.0.1", server.bound_port
             )
             try:
                 assert server.client_count() == 1
-                # The client never reads; send enough lines to overflow its
-                # bounded queue. send() must return promptly (non-blocking)
-                # and drop the stalled client.
-                for _ in range(2000):
-                    await asyncio.wait_for(server.send("DCV 607.80"), timeout=5)
-                    if server.client_count() == 0:
-                        break
+                client = server._clients[0]
+                # Fill the bounded queue without yielding so the drain task
+                # can't drain it (simulating a reader stalled on a full socket).
+                while not client.queue.full():
+                    client.queue.put_nowait(b"x")
+                assert client.queue.full()
+                # send() must drop the full client promptly (non-blocking).
+                await server.send("DCV 607.80")
                 assert server.client_count() == 0
             finally:
                 writer.close()
