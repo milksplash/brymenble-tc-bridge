@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import logging
 import os
 import sys
 import time
@@ -20,20 +19,10 @@ import time
 if __package__ in (None, ""):
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from brymenble import BrymenbleClient
+from brymenble import BrymenbleClient, console
 
 from bridge.emitter import Emitter
 from bridge.transports import TcpLineServer
-
-log = logging.getLogger(__name__)
-
-
-def _on_retry(attempt: int, max_retries, error: Exception) -> None:
-    """Log retry attempts (SDK calls this before each retry)."""
-    if max_retries is None:
-        log.warning("retry %d: %s (retrying until the meter returns)", attempt, error)
-    else:
-        log.warning("retry %d/%s: %s", attempt, max_retries, error)
 
 
 async def run_bridge(
@@ -94,36 +83,17 @@ async def run_bridge(
         keepalive_task = asyncio.create_task(_keepalive())
     try:
         await server.start()
-        log.info(
-            "bridge listening on %s:%s — point TestController at #port %d "
-            "(Socket interface)",
-            server.host,
-            server.bound_port,
-            server.bound_port,
-        )
 
         # Initial connect (retries forever until the meter is in range).
-        await client.ensure_connected(retries=None, on_retry=_on_retry)
-        log.info("connected to %s", mac)
-
-        def _on_lost(reason: str) -> None:
-            if reason == "pause_cap":
-                log.warning(
-                    "no data for %.0fs with link up — forcing reconnect",
-                    pause_cap,
-                )
-            else:
-                log.warning("BLE link lost — reconnecting")
-
-        def _on_reconnected() -> None:
-            log.info("reconnected to %s", mac)
+        await client.ensure_connected(retries=None, on_retry=console.retry)
+        console.status(f"connected to {mac}")
 
         async for frame in client.read_stream(
             pause_cap=pause_cap,
             retries=None,
-            on_retry=_on_retry,
-            on_lost=_on_lost,
-            on_reconnected=_on_reconnected,
+            on_retry=console.retry,
+            on_lost=console.lost,
+            on_reconnected=console.reconnected,
         ):
             # Remember the last reading so the gap keep-alive can reuse its
             # mode token (the multi-mode def needs a valid column to show "?").

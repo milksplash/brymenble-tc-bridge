@@ -22,6 +22,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Lifecycle events now print via the shared `console` module** — retry,
+  lost, reconnected and connected events use `brymenble.console` (matching the
+  overlay) instead of the bridge's own `logging` handlers, and the duplicate
+  "listening" log line was removed (the CLI already prints it via
+  `console.status`). Transport-level client connect/disconnect diagnostics
+  remain on `logging`.
 - **Default TCP bind is now `127.0.0.1`** — the bridge no longer listens on
   all interfaces by default. LAN access is opt-in via `--host 0.0.0.0`, so the
   TCP socket is not exposed to the network unless explicitly requested
